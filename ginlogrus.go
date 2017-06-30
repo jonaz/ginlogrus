@@ -8,7 +8,6 @@ import (
 )
 
 // New returns a gin compatable middleware using logrus to log
-// TODO put this in separate library
 func New(logger *logrus.Logger, timeFormat string, utc bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
