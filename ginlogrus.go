@@ -3,8 +3,8 @@ package ginlogrus
 import (
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 // New returns a gin compatable middleware using logrus to log
