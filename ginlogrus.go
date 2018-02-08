@@ -30,7 +30,7 @@ func New(logger *logrus.Logger, timeFormat string) gin.HandlerFunc {
 		})
 
 		if len(c.Errors) > 0 {
-			entry.Error(c.Errors.ByType(gin.ErrorTypePrivate).String())
+			entry.Error(c.Errors.String())
 			return
 		}
 
