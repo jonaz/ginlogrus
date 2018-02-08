@@ -15,9 +15,6 @@ func New(logger *logrus.Logger, timeFormat string) gin.HandlerFunc {
 		path := c.Request.URL.Path
 		c.Next()
 
-		end := time.Now()
-		latency := end.Sub(start)
-
 		statusCode := c.Writer.Status()
 
 		entry := logger.WithFields(logrus.Fields{
@@ -25,7 +22,7 @@ func New(logger *logrus.Logger, timeFormat string) gin.HandlerFunc {
 			"method":     c.Request.Method,
 			"path":       path,
 			"ip":         c.ClientIP(),
-			"latency":    latency,
+			"latency":    time.Now().Sub(start),
 			"user-agent": c.Request.UserAgent(),
 		})
 
