@@ -8,7 +8,7 @@ import (
 )
 
 // New returns a gin compatable middleware using logrus to log
-func New(logger *logrus.Logger, timeFormat string, utc bool) gin.HandlerFunc {
+func New(logger *logrus.Logger, timeFormat string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		// some evil middlewares modify this values
@@ -17,9 +17,6 @@ func New(logger *logrus.Logger, timeFormat string, utc bool) gin.HandlerFunc {
 
 		end := time.Now()
 		latency := end.Sub(start)
-		if utc {
-			end = end.UTC()
-		}
 
 		statusCode := c.Writer.Status()
 
@@ -30,7 +27,6 @@ func New(logger *logrus.Logger, timeFormat string, utc bool) gin.HandlerFunc {
 			"ip":         c.ClientIP(),
 			"latency":    latency,
 			"user-agent": c.Request.UserAgent(),
-			"time":       end.Format(timeFormat),
 		})
 
 		if len(c.Errors) > 0 {
