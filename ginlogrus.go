@@ -17,13 +17,16 @@ func New(logger *logrus.Logger, timeFormat string) gin.HandlerFunc {
 
 		statusCode := c.Writer.Status()
 
+		latency := time.Now().Sub(start)
+
 		entry := logger.WithFields(logrus.Fields{
-			"status":     statusCode,
-			"method":     c.Request.Method,
-			"path":       path,
-			"ip":         c.ClientIP(),
-			"latency":    time.Now().Sub(start),
-			"user-agent": c.Request.UserAgent(),
+			"status":         statusCode,
+			"method":         c.Request.Method,
+			"path":           path,
+			"ip":             c.ClientIP(),
+			"latency":        latency,
+			"latency_string": latency.String(),
+			"user-agent":     c.Request.UserAgent(),
 		})
 
 		if len(c.Errors) > 0 {
