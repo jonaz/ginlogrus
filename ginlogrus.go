@@ -8,12 +8,27 @@ import (
 )
 
 // New returns a gin compatable middleware using logrus to log
-func New(logger *logrus.Logger, timeFormat string) gin.HandlerFunc {
+// skipPaths only skips the INFO loglevel
+func New(logger *logrus.Logger, skipPaths ...string) gin.HandlerFunc {
+	var skip map[string]struct{}
+
+	if length := len(skipPaths); length > 0 {
+		skip = make(map[string]struct{}, length)
+
+		for _, path := range skipPaths {
+			skip[path] = struct{}{}
+		}
+	}
+
 	return func(c *gin.Context) {
 		start := time.Now()
 		// some evil middlewares modify this values
 		path := c.Request.URL.Path
 		c.Next()
+
+		if _, ok := skip[path]; ok {
+			return
+		}
 
 		statusCode := c.Writer.Status()
 
@@ -39,6 +54,9 @@ func New(logger *logrus.Logger, timeFormat string) gin.HandlerFunc {
 		} else if statusCode > 399 {
 			entry.Warn()
 		} else {
+			if _, ok := skip[path]; ok {
+				return
+			}
 			entry.Info()
 		}
 
