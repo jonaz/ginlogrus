@@ -26,12 +26,7 @@ func New(logger *logrus.Logger, skipPaths ...string) gin.HandlerFunc {
 		path := c.Request.URL.Path
 		c.Next()
 
-		if _, ok := skip[path]; ok {
-			return
-		}
-
 		statusCode := c.Writer.Status()
-
 		latency := time.Now().Sub(start)
 
 		entry := logger.WithFields(logrus.Fields{
