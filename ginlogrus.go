@@ -19,24 +19,30 @@ func New(logger *logrus.Logger, skipPaths ...string) gin.HandlerFunc {
 			skip[path] = struct{}{}
 		}
 	}
-
 	return func(c *gin.Context) {
 		start := time.Now()
 		// some evil middlewares modify this values
 		path := c.Request.URL.Path
+		logger := logger.WithFields(logrus.Fields{
+			"method":     c.Request.Method,
+			"path":       path,
+			"ip":         c.ClientIP(),
+			"user-agent": c.Request.UserAgent(),
+			"host":       c.Request.Host,
+			"length":     c.Request.ContentLength,
+		})
+
+		c.Set("ginlogrus", logger)
+
 		c.Next()
 
-		statusCode := c.Writer.Status()
 		latency := time.Now().Sub(start)
+		statusCode := c.Writer.Status()
 
 		entry := logger.WithFields(logrus.Fields{
 			"status":         statusCode,
-			"method":         c.Request.Method,
-			"path":           path,
-			"ip":             c.ClientIP(),
 			"latency":        latency,
 			"latency_string": latency.String(),
-			"user-agent":     c.Request.UserAgent(),
 		})
 
 		if len(c.Errors) > 0 {
@@ -54,6 +60,18 @@ func New(logger *logrus.Logger, skipPaths ...string) gin.HandlerFunc {
 			}
 			entry.Info()
 		}
-
 	}
+}
+
+// GetLogger takes a gin context and returns a logrus Entry logger if it exists
+// on the gin context. If it does not exist it returns nil
+func GetLogger(c *gin.Context) *logrus.Entry {
+	logger, exists := c.Get("ginlogrus")
+	if !exists {
+		return nil
+	}
+	if l, ok := logger.(*logrus.Entry); ok {
+		return l
+	}
+	return nil
 }
