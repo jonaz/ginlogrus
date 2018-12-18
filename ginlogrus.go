@@ -45,20 +45,15 @@ func New(logger *logrus.Logger, skipPaths ...string) gin.HandlerFunc {
 			"latency_string": latency.String(),
 		})
 
-		if len(c.Errors) > 0 {
-			entry.Error(c.Errors.String())
-			return
-		}
-
 		if statusCode > 499 {
-			entry.Error()
+			entry.Error(c.Errors.String())
 		} else if statusCode > 399 {
-			entry.Warn()
+			entry.Warn(c.Errors.String())
 		} else {
 			if _, ok := skip[path]; ok {
 				return
 			}
-			entry.Info()
+			entry.Info(c.Errors.String())
 		}
 	}
 }
