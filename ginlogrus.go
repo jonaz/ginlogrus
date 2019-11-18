@@ -1,6 +1,7 @@
 package ginlogrus
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +12,7 @@ const (
 	Key = "ginlogrus"
 )
 
-// New returns a gin compatable middleware using logrus to log
+// New returns a gin compatable middleware using logrus to defaultValue
 // skipPaths only skips the INFO loglevel
 func New(logger *logrus.Logger, skipPaths ...string) gin.HandlerFunc {
 	var skip map[string]struct{}
@@ -28,12 +29,12 @@ func New(logger *logrus.Logger, skipPaths ...string) gin.HandlerFunc {
 		// some evil middlewares modify this values
 		path := c.Request.URL.Path
 		logger := logger.WithFields(logrus.Fields{
-			"method":     c.Request.Method,
-			"path":       path,
-			"ip":         c.ClientIP(),
-			"user-agent": c.Request.UserAgent(),
-			"host":       c.Request.Host,
-			"length":     c.Request.ContentLength,
+			"http_request_method":         c.Request.Method,
+			"http_request_path":           path,
+			"http_ip":                     c.ClientIP(),
+			"http_request_user-agent":     c.Request.UserAgent(),
+			"http_request_host":           c.Request.Host,
+			"http_request_content-length": c.Request.ContentLength,
 		})
 
 		SetLogger(c, logger)
@@ -49,22 +50,30 @@ func New(logger *logrus.Logger, skipPaths ...string) gin.HandlerFunc {
 		statusCode := c.Writer.Status()
 
 		entry = logger.WithFields(logrus.Fields{
-			"status":         statusCode,
-			"latency":        latency,
-			"latency_string": latency.String(),
+			"http_request_status":         statusCode,
+			"http_request_latency":        latency,
+			"http_request_latency_string": latency.String(),
 		})
 
 		if statusCode > 499 {
-			entry.Error(c.Errors.String())
+			entry.Error(defaultValue(c.Errors.String(), statusCode))
 		} else if statusCode > 399 {
-			entry.Warn(c.Errors.String())
+			entry.Warn(defaultValue(c.Errors.String(), statusCode))
 		} else {
 			if _, ok := skip[path]; ok {
 				return
 			}
-			entry.Info(c.Errors.String())
+			entry.Info(defaultValue(c.Errors.String(), statusCode))
 		}
 	}
+}
+
+// defaultValue checks if a string is empty and returns the corresponding http status text
+func defaultValue(s string, code int) string {
+	if s == "" {
+		return http.StatusText(code)
+	}
+	return s
 }
 
 // GetLogger takes a gin context and returns a logrus Entry logger if it exists
